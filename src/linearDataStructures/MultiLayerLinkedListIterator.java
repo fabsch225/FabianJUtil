@@ -20,5 +20,10 @@ public class MultiLayerLinkedListIterator<T, I> implements Iterator<T>{
 	public T next() {
 		return multiLayerLinkedList.next();
 	}
+	
+	@Override
+	public void remove() {
+		multiLayerLinkedList.remove();
+	}
 
 }

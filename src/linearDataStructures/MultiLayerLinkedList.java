@@ -70,13 +70,14 @@ public class MultiLayerLinkedList<T, I> implements Iterable<T> {
 			
 			if (SubListKeys.contains(i)) {
 				lastNodes.get(i).setNext(i, newNode);
+				newNode.setPrev(i, lastNodes.get(i));
 				lastNodes.put(i, newNode);
 				size.put(i, size.get(i) + 1);
 			}
 			else {
 				SubListKeys.add(i);
 				size.put(i, 1);
-				
+				newNode.setPrev(i, null);
 				startNodes.put(i, newNode);
 				currentNodes.put(i, newNode);
 				lastNodes.put(i, newNode);
@@ -91,12 +92,13 @@ public class MultiLayerLinkedList<T, I> implements Iterable<T> {
 		Node<T, I> newNode = new Node<T, I>(data);
 		if (hasData()) {
 			lastNodes.get(null).setNext(null, newNode);
+			newNode.setPrev(null, lastNodes.get(null));
 			lastNodes.put(null, newNode);
 			size.put(null, size.get(null) + 1);
 		}
 		else {
 			size.put(null, 1);
-			
+			newNode.setPrev(null, null);
 			startNodes.put(null, newNode);
 			currentNodes.put(null, newNode);
 			lastNodes.put(null, newNode);
@@ -130,13 +132,34 @@ public class MultiLayerLinkedList<T, I> implements Iterable<T> {
 		currentNodes.get(i).setContent(data);
 	}
 	
-	public void deleteRest(I i) {
+	public void removeFromHere(I i) {
 		checkNull(i);
 		currentNodes.get(i).setNext(i, null);
 	}
 	
-	public void deleteRest() {
-		
+	public void removeFromHere() {
+		currentNodes.get(null).setNext(null, null);
+	}
+	
+	public void remove(I i) {
+		currentNodes.get(i).getPrev(i).setNext(i, currentNodes.get(i).getNext(i));
+		currentNodes.put(i, currentNodes.get(i).getPrev(i));
+	}
+	
+	public void remove() {
+		currentNodes.get(null).getPrev(null).setNext(null, currentNodes.get(null).getNext(null));
+		currentNodes.put(null, currentNodes.get(null).getPrev(null));
+	}
+	
+	public void remove(I i, T t) {
+		toStart(i);
+		while(hasNext(i)) {
+			if (currentNodes.get(i).getContent() == t) {
+				remove(i);
+				break;
+			}
+			next(i);
+		}
 	}
 	
 	public T next() {
@@ -170,7 +193,7 @@ public class MultiLayerLinkedList<T, I> implements Iterable<T> {
 		} 
 	
 		for (I i : SubListKeys) {
-			res += toString(i) + "\n";
+			res += "\n" + toString(i);
 		}
 		
 		return res;
@@ -192,26 +215,36 @@ public class MultiLayerLinkedList<T, I> implements Iterable<T> {
 	static class Node<T, I> {
 		private T data;
 		private HashMap<I, Node<T, I>> nextNodes;
+		private HashMap<I, Node<T, I>> prevNodes;
 		
-		public Node(T data_) {
+		Node(T data_) {
 			nextNodes = new HashMap<I, Node<T, I>>();
+			prevNodes = new HashMap<I, Node<T, I>>();
 			data = data_;
 		}
 		
-		public T getContent() {
+		T getContent() {
 			return data;
 		}
 		
-		public void setContent(T newData) {
+		void setContent(T newData) {
 			data = newData;
 		}
 		
-		public Node<T, I> getNext(I i) {
+		Node<T, I> getNext(I i) {
 			return nextNodes.get(i);
 		}
 		
-		public void setNext(I i, Node<T, I> newNode) {
+		void setNext(I i, Node<T, I> newNode) {
 			nextNodes.put(i, newNode);
+		}
+		
+		Node<T, I> getPrev(I i) {
+			return prevNodes.get(i);
+		}
+		
+		void setPrev(I i, Node<T, I> newNode) {
+			prevNodes.put(i, newNode);
 		}
 	}
 

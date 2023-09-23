@@ -24,4 +24,8 @@ public class LinkedSubListIterator<T, I> implements Iterator<T>{
 		return multiLayerLinkedList.next(SublistIndentifier);
 	}
 
+	@Override
+	public void remove() {
+		multiLayerLinkedList.remove(SublistIndentifier);
+	}
 }

@@ -25,6 +25,8 @@ public class mlall_demo {
 		
 		System.out.println(x.toString());
 		
+		System.out.println();
+		
 		Iterator<String> iter = x.iterator();		
 		
 		while(iter.hasNext()) {
@@ -33,10 +35,17 @@ public class mlall_demo {
 		
 		System.out.println();
 		
+		x.toStart(1);
+		x.next(1);
+		
+		x.removeFromHere(1);
+		
 		Iterator<String> iter2 = x.iterator(1);		
 		
 		while(iter2.hasNext()) {
 			System.out.println(iter2.next());
 		}
+		
+		
 	}
 }
