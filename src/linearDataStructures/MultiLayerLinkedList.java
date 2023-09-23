@@ -1,9 +1,13 @@
 package linearDataStructures;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -47,6 +51,7 @@ public class MultiLayerLinkedList<T, I> implements Iterable<T> {
 		
 		if (SubListKeys.contains(i)) {
 			lastNodes.get(i).setNext(i, newNode);
+			newNode.setPrev(i, lastNodes.get(i));
 			lastNodes.put(i, newNode);
 			size.put(i, size.get(i) + 1);
 		}
@@ -59,15 +64,15 @@ public class MultiLayerLinkedList<T, I> implements Iterable<T> {
 			lastNodes.put(i, newNode);
 		}
 	
-		addContent(data);
+		addNodeToMain(newNode);
 	}
 	
 	public void addContent(Collection<I> indices, T data) {
+		Node<T, I> newNode = new Node<T, I>(data);
+		newNode.SubListIndices = indices;
+		
 		for (I i : indices) {
 			checkNull(i);
-			
-			Node<T, I> newNode = new Node<T, I>(data);
-			
 			if (SubListKeys.contains(i)) {
 				lastNodes.get(i).setNext(i, newNode);
 				newNode.setPrev(i, lastNodes.get(i));
@@ -84,7 +89,7 @@ public class MultiLayerLinkedList<T, I> implements Iterable<T> {
 			}
 		
 		}
-		addContent(data);
+		addNodeToMain(newNode);
 	}
 	
 	public void addContent(T data) {
@@ -105,6 +110,22 @@ public class MultiLayerLinkedList<T, I> implements Iterable<T> {
 		}
 	}
 	
+	public void addNodeToMain(Node<T, I> newNode) {
+		if (hasData()) {
+			lastNodes.get(null).setNext(null, newNode);
+			newNode.setPrev(null, lastNodes.get(null));
+			lastNodes.put(null, newNode);
+			size.put(null, size.get(null) + 1);
+		}
+		else {
+			size.put(null, 1);
+			newNode.setPrev(null, null);
+			startNodes.put(null, newNode);
+			currentNodes.put(null, newNode);
+			lastNodes.put(null, newNode);
+		}
+	}
+
 	public boolean hasNext(I i) {
 		checkNull(i);
 		return currentNodes.get(i) != null;
@@ -134,21 +155,146 @@ public class MultiLayerLinkedList<T, I> implements Iterable<T> {
 	
 	public void removeFromHere(I i) {
 		checkNull(i);
-		currentNodes.get(i).setNext(i, null);
+		
+		while(currentNodes.get(i) != lastNodes.get(i)) {
+			System.out.println(currentNodes.get(i).getContent());
+			
+			remove(i);
+			 
+		}
+		
 	}
 	
 	public void removeFromHere() {
-		currentNodes.get(null).setNext(null, null);
+		if (hasNext()) {
+			while(hasNext()) {
+				next();
+				if (hasNext()) remove();
+			}
+		}
 	}
 	
 	public void remove(I i) {
-		currentNodes.get(i).getPrev(i).setNext(i, currentNodes.get(i).getNext(i));
-		currentNodes.put(i, currentNodes.get(i).getPrev(i));
+		checkNull(i);
+	
+		if (currentNodes.get(i).getNext(i) == null) {
+			if (currentNodes.get(i).getPrev(i) != null) {
+				currentNodes.get(i).getPrev(i).setNext(i, null);
+				
+				lastNodes.put(i, currentNodes.get(i).getPrev(i));
+				currentNodes.put(i, currentNodes.get(i).getPrev(i));
+			}
+			else {
+				currentNodes.remove(i);
+				lastNodes.remove(i);
+				startNodes.remove(i);
+			}
+		}
+		else {
+			if (currentNodes.get(i).getPrev(i) != null) {
+				currentNodes.get(i).getPrev(i).setNext(i, currentNodes.get(i).getNext(i));
+				
+				currentNodes.get(i).getNext(i).setPrev(i, currentNodes.get(i).getPrev(i));
+				
+				currentNodes.put(i, currentNodes.get(i).getNext(i));
+			}
+			else {
+				
+				currentNodes.get(i).getNext(i).setPrev(i, null);
+				
+				
+				startNodes.put(i, currentNodes.get(i).getNext(i));
+				currentNodes.put(i, currentNodes.get(i).getNext(i));
+			}
+		}
+		
+	}
+	
+	public void removeDeep(I i) {
+		if (currentNodes.get(i).SubListIndices == null) {
+			remove(i);
+		}
+		else {
+			for (I i1 : currentNodes.get(i).SubListIndices) {
+				if (i1 == i) i1 = null; 
+				System.out.println(i1);
+				Node<T, I> prev = currentNodes.get(i).getPrev(i1);
+				Node<T, I> next = currentNodes.get(i).getNext(i1);
+				
+				if (next == null) {
+					if (prev != null) {
+						System.out.println("a");
+						prev.setNext(i1, null);
+						
+						lastNodes.put(i1, prev);
+						currentNodes.put(i1, prev);
+					}
+					else {
+						System.out.println("b");
+						currentNodes.remove(i1);
+						lastNodes.remove(i1);
+						startNodes.remove(i1);
+					}
+				}
+				else {
+					if (prev != null) {
+						System.out.println("c");
+						prev.setNext(i1, next);
+						
+						next.setPrev(i, prev);
+						
+						currentNodes.put(i1, next);
+					}
+					else {
+						System.out.println("d");
+						next.setPrev(i1, null);
+
+						startNodes.put(i1, next);
+						currentNodes.put(i1, next);
+					}
+				}
+			}
+			
+			remove(i);
+		}
+		
+		/*currentNodes.get(i).getPrev(i).setNext(i, currentNodes.get(i).getNext(i));
+		
+		currentNodes.get(i).getNext(i).setPrev(i, currentNodes.get(i).getPrev(i));
+		
+		currentNodes.put(i, currentNodes.get(i).getNext(i));*/
 	}
 	
 	public void remove() {
-		currentNodes.get(null).getPrev(null).setNext(null, currentNodes.get(null).getNext(null));
-		currentNodes.put(null, currentNodes.get(null).getPrev(null));
+		if (currentNodes.get(null).getNext(null) == null) {
+			if (currentNodes.get(null).getPrev(null) != null) {
+				currentNodes.get(null).getPrev(null).setNext(null, null);
+				
+				lastNodes.put(null, currentNodes.get(null).getPrev(null));
+				currentNodes.put(null, currentNodes.get(null).getPrev(null));
+			}
+			else {
+				currentNodes.remove(null);
+				lastNodes.remove(null);
+				startNodes.remove(null);
+			}
+		}
+		else {
+			if (currentNodes.get(null).getPrev(null) != null) {
+				currentNodes.get(null).getPrev(null).setNext(null, currentNodes.get(null).getNext(null));
+				
+				currentNodes.get(null).getNext(null).setPrev(null, currentNodes.get(null).getPrev(null));
+				
+				currentNodes.put(null, currentNodes.get(null).getNext(null));
+			}
+			else {
+				
+				currentNodes.get(null).getNext(null).setPrev(null, null);
+				
+				startNodes.put(null, currentNodes.get(null).getNext(null));
+				currentNodes.put(null, currentNodes.get(null).getNext(null));
+			}
+		}
 	}
 	
 	public void remove(I i, T t) {
@@ -217,6 +363,8 @@ public class MultiLayerLinkedList<T, I> implements Iterable<T> {
 		private HashMap<I, Node<T, I>> nextNodes;
 		private HashMap<I, Node<T, I>> prevNodes;
 		
+		private Collection<I> SubListIndices;
+		
 		Node(T data_) {
 			nextNodes = new HashMap<I, Node<T, I>>();
 			prevNodes = new HashMap<I, Node<T, I>>();
@@ -246,6 +394,23 @@ public class MultiLayerLinkedList<T, I> implements Iterable<T> {
 		void setPrev(I i, Node<T, I> newNode) {
 			prevNodes.put(i, newNode);
 		}
+		
+		HashMap<I, Node<T, I>> getNextForAll() {
+			return nextNodes;
+		}
+		
+		void setNextForAll(HashMap<I, Node<T, I>> h) {
+			nextNodes.putAll(h);
+		}
+		
+		HashMap<I, Node<T, I>> getPrevForAll() {
+			return prevNodes;
+		}
+		
+		void setPrevForAll(HashMap<I, Node<T, I>> h) {
+			prevNodes.putAll(h);
+		}
+		
 	}
 
 	@Override
